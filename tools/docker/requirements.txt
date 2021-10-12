@@ -1,0 +1,22 @@
+# formatting, type checking and code analysis
+black
+mypy
+flake8
+pycodestyle
+pydocstyle
+pylint
+
+# testing utilities
+hypothesis
+isort
+pyfakefs
+
+# misc
+jsonschema
+ruamel.yaml
+pillow
+
+# dl
+onnxruntime
+tf2onnx
+tensorflow
