@@ -1,3 +1,4 @@
+"""Tests for dense blocks."""
 import unittest
 
 import tensorflow as tf
@@ -6,7 +7,11 @@ from zoo.blocks.dense import DenseBlock
 
 
 class TestDenseBlock(unittest.TestCase):
+    """Test dense block."""
+
+    # pylint: disable=protected-access
     def test_creation(self):
+        """Test the creation of dense blocks."""
         block = DenseBlock([(10, "relu"), (10, "sigmoid"), (5, "relu")])
 
         self.assertEqual(len(block._layers), 3)
@@ -33,7 +38,8 @@ class TestDenseBlock(unittest.TestCase):
                 units,
             )
 
-    def test_dense_block_two_dim_input(self):
+    def test_dense_block_input_output_shape_match(self):
+        """Test if dense block input-output shapes are matching."""
         block_in = tf.zeros(
             (
                 1,
@@ -46,7 +52,3 @@ class TestDenseBlock(unittest.TestCase):
         out_ = block(block_in)
 
         self.assertEqual(out_.shape, tf.TensorShape((1, 5)))
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -1,3 +1,4 @@
+"""Data loader base."""
 import abc
 from pathlib import Path
 
@@ -7,34 +8,55 @@ from data_types.spatial_size import SpatialSize
 
 
 class Loader(abc.ABC):
-    """Base class for data loading."""
+    """Data loader base."""
+
+    EXPORT_BATCH_SIZE = 1
 
     def __init__(self, train_batch_size: int, eval_batch_size: int, path: Path):
-
+        """Create an instance."""
         self._train_batch_size = train_batch_size
         self._eval_batch_size = eval_batch_size
         self._path = path
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def training_data_handle(self) -> tf.data.Dataset:
-        pass
+        """Get a handle to training data generator."""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def eval_data_handle(self) -> tf.data.Dataset:
-        pass
+        """Get a handle to evaluation data generator."""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def train_num_batches(self) -> int:
-        pass
+        """Get number of training batches."""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def eval_num_batches(self) -> int:
-        pass
+        """Get number of evaluation batches."""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def train_spatial_size(self) -> SpatialSize:
-        pass
+        """Get the spatial size of the training input."""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def eval_spatial_size(self) -> SpatialSize:
-        pass
+        """Get the spatial size of the evaluation input."""
+
+    def make_tensorspec_for_export(self) -> tf.TensorSpec:
+        """Create a tensorspec instance for exports."""
+        return tf.TensorSpec(
+            shape=(
+                type(self).EXPORT_BATCH_SIZE,
+                self.eval_spatial_size.height,
+                self.eval_spatial_size.width,
+                self.eval_spatial_size.depth,
+            ),
+            dtype=tf.float32,
+            name="input",
+        )

@@ -1,5 +1,6 @@
 # formatting, type checking and code analysis
 black
+isort
 mypy
 flake8
 pycodestyle
@@ -8,7 +9,6 @@ pylint
 
 # testing utilities
 hypothesis
-isort
 pyfakefs
 
 # misc
@@ -19,4 +19,6 @@ pillow
 # dl
 onnxruntime
 tf2onnx
-tensorflow
+tensorflow~=2.9.0
+protobuf<3.20
+flatbuffers<2

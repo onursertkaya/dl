@@ -3,9 +3,10 @@
 # then to
 # https://hub.docker.com/r/nvidia/cuda/tags
 # for required base image.
+# cudnn8-devel is needed for XLA support.
 
-FROM nvidia/cuda:11.2.0-cudnn8-runtime-ubuntu20.04
-COPY requirements.txt /tmp
+FROM nvidia/cuda:11.2.0-cudnn8-devel-ubuntu20.04
+COPY tools/conf/requirements.txt /tmp
 
 RUN apt-get update && apt-get install -y \
     python3-pip \

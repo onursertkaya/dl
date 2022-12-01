@@ -94,9 +94,9 @@ class InputBlock(tf.keras.layers.Layer):
 
     def call(self, input_tensor, training):
         """Forward pass."""
-        t = self.conv(input_tensor)
-        t = self.batch_norm(t, training=training)
-        return tf.nn.relu(t)
+        intermediate = self.conv(input_tensor)
+        intermediate = self.batch_norm(intermediate, training=training)
+        return tf.nn.relu(intermediate)
 
 
 @final
@@ -124,7 +124,7 @@ class InitialPoolBlock(tf.keras.layers.Layer):
         return self.maxpool(input_tensor)
 
 
-class _ResnetBlock(tf.keras.layers.Layer, abc.ABC):
+class ResnetBlock(tf.keras.layers.Layer, abc.ABC):
     """Abstract base class for Resnet block variants.
 
     This class only defines the "trunk", a.k.a. non-residual
@@ -136,7 +136,11 @@ class _ResnetBlock(tf.keras.layers.Layer, abc.ABC):
 
     @abc.abstractmethod
     def __init__(
-        self, num_filters: int, use_batch_norm: bool, downsample: bool, name: str
+        self,
+        name: str,
+        num_filters: int,
+        downsample: bool,
+        use_batch_norm: bool = True,
     ):
         """Initialize layers."""
         assert num_filters in [64, 128, 256, 512]
@@ -147,12 +151,7 @@ class _ResnetBlock(tf.keras.layers.Layer, abc.ABC):
                 3,
                 3,
             ),
-            strides=(
-                2,
-                2,
-            )
-            if downsample
-            else (1, 1),
+            strides=(2, 2) if downsample else (1, 1),
             padding=PADDING_SAME,
             data_format=DATA_FORMAT,
             activation=None,
@@ -168,14 +167,8 @@ class _ResnetBlock(tf.keras.layers.Layer, abc.ABC):
 
         self.conv2 = tf.keras.layers.Conv2D(
             filters=num_filters,
-            kernel_size=(
-                3,
-                3,
-            ),
-            strides=(
-                1,
-                1,
-            ),
+            kernel_size=(3, 3),
+            strides=(1, 1),
             padding=PADDING_SAME,
             data_format=DATA_FORMAT,
             activation=None,
@@ -190,11 +183,12 @@ class _ResnetBlock(tf.keras.layers.Layer, abc.ABC):
         )
 
     def call(self, layer_in, training):
+        """Run the block."""
         raise RuntimeError(f"{str(__class__)} can't be used directly.")
 
 
 @final
-class ResnetBlockA(_ResnetBlock):
+class ResnetBlockA(ResnetBlock):
     """Block type-A.
 
     https://arxiv.org/pdf/1512.03385.pdf
@@ -205,7 +199,8 @@ class ResnetBlockA(_ResnetBlock):
     channels.
 
     * https://github.com/keras-team/keras/issues/2608
-    * https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py#L301
+    * https://github.com/tensorflow/tensorflow/blob/\
+        master/tensorflow/python/keras/applications/resnet.py#L301
 
 
                  |-----------------|                  |--------------------|
@@ -215,7 +210,11 @@ class ResnetBlockA(_ResnetBlock):
     """
 
     def __init__(
-        self, name: str, num_filters: int, use_batch_norm=True, downsample=False
+        self,
+        name: str,
+        num_filters: int,
+        downsample: bool,
+        use_batch_norm: bool = True,
     ):
         """Initialize layers."""
         super().__init__(
@@ -246,21 +245,21 @@ class ResnetBlockA(_ResnetBlock):
 
     def call(self, layer_in, training):
         """Forward pass."""
-        t = self.conv1(layer_in)
-        t = self.batch_norm1(t, training=training)
-        t = tf.nn.relu(t)
-        t = self.conv2(t)
-        t = self.batch_norm2(t, training=training)
+        intermediate = self.conv1(layer_in)
+        intermediate = self.batch_norm1(intermediate, training=training)
+        intermediate = tf.nn.relu(intermediate)
+        intermediate = self.conv2(intermediate)
+        intermediate = self.batch_norm2(intermediate, training=training)
 
         skip = self.maybe_skip_concat(layer_in)
         skip = self.maybe_skip_pool(skip)
 
-        t += skip
-        return tf.nn.relu(t)
+        intermediate += skip
+        return tf.nn.relu(intermediate)
 
 
 @final
-class ResnetBlockB(_ResnetBlock):
+class ResnetBlockB(ResnetBlock):
     """Block type-B.
 
     https://arxiv.org/pdf/1512.03385.pdf
@@ -277,7 +276,11 @@ class ResnetBlockB(_ResnetBlock):
     """
 
     def __init__(
-        self, name: str, num_filters: int, use_batch_norm=True, downsample=False
+        self,
+        name: str,
+        num_filters: int,
+        downsample: bool,
+        use_batch_norm: bool = True,
     ):
         """Initialize layers."""
         super().__init__(
@@ -316,21 +319,21 @@ class ResnetBlockB(_ResnetBlock):
 
     def call(self, layer_in, training):
         """Forward pass."""
-        t = self.conv1(layer_in)
-        t = self.batch_norm1(t, training=training)
-        t = tf.nn.relu(t)
-        t = self.conv2(t)
-        t = self.batch_norm2(t, training=training)
+        intermediate = self.conv1(layer_in)
+        intermediate = self.batch_norm1(intermediate, training=training)
+        intermediate = tf.nn.relu(intermediate)
+        intermediate = self.conv2(intermediate)
+        intermediate = self.batch_norm2(intermediate, training=training)
 
         skip = self.maybe_skip_conv(layer_in)
         skip = self.maybe_skip_batchnorm(skip, training=training)
 
-        t += skip
-        return tf.nn.relu(t)
+        intermediate += skip
+        return tf.nn.relu(intermediate)
 
 
 @final
-class ResnetBlockC(_ResnetBlock):
+class ResnetBlockC(ResnetBlock):
     """Block type-C.
 
     https://arxiv.org/pdf/1512.03385.pdf
@@ -340,7 +343,13 @@ class ResnetBlockC(_ResnetBlock):
 
     """
 
-    def __init__(self, name: str, num_filters, use_batch_norm=True, downsample=False):
+    def __init__(
+        self,
+        name: str,
+        num_filters,
+        downsample: bool,
+        use_batch_norm: bool = True,
+    ):
         """Initialize layers."""
         super().__init__(
             num_filters=num_filters,
@@ -375,17 +384,17 @@ class ResnetBlockC(_ResnetBlock):
 
     def call(self, layer_in, training):
         """Forward pass."""
-        t = self.conv1(layer_in)
-        t = self.batch_norm1(t, training=training)
-        t = tf.nn.relu(t)
-        t = self.conv2(t)
-        t = self.batch_norm2(t, training=training)
+        intermediate = self.conv1(layer_in)
+        intermediate = self.batch_norm1(intermediate, training=training)
+        intermediate = tf.nn.relu(intermediate)
+        intermediate = self.conv2(intermediate)
+        intermediate = self.batch_norm2(intermediate, training=training)
 
         skip = self.skip_conv(layer_in)
         skip = self.maybe_skip_batchnorm(skip, training=training)
 
-        t += skip
-        return tf.nn.relu(t)
+        intermediate += skip
+        return tf.nn.relu(intermediate)
 
 
 @final
@@ -394,14 +403,19 @@ class BottleneckBlock(tf.keras.layers.Layer):
 
     https://arxiv.org/pdf/1512.03385.pdf
 
-    Note that this implementation does not inherit from _ResnetBlock
+    Note that this implementation does not inherit from ResnetBlock
     as it has a specialized pipeline which is different than the
     A, B, C variants.
 
-    Used in ResNet-{50, 101, 152}."""
+    Used in ResNet-{50, 101, 152}.
+    """
 
     def __init__(
-        self, name: str, num_filters: int, use_batch_norm=True, downsample=False
+        self,
+        name: str,
+        num_filters: int,
+        downsample: bool,
+        use_batch_norm: bool = True,
     ):
         """Initialize layers."""
         assert num_filters in [64, 128, 256, 512]
@@ -512,20 +526,20 @@ class BottleneckBlock(tf.keras.layers.Layer):
 
     def call(self, layer_in, training):
         """Forward pass."""
-        t = self.conv1(layer_in)
-        t = self.batch_norm1(t, training)
-        t = tf.nn.relu(t)
-        t = self.conv2(t)
-        t = self.batch_norm2(t, training)
-        t = tf.nn.relu(t)
-        t = self.conv3(t)
-        t = self.batch_norm3(t, training)
+        intermediate = self.conv1(layer_in)
+        intermediate = self.batch_norm1(intermediate, training)
+        intermediate = tf.nn.relu(intermediate)
+        intermediate = self.conv2(intermediate)
+        intermediate = self.batch_norm2(intermediate, training)
+        intermediate = tf.nn.relu(intermediate)
+        intermediate = self.conv3(intermediate)
+        intermediate = self.batch_norm3(intermediate, training)
 
         skip = self.maybe_skip_conv(layer_in)
         skip = self.maybe_skip_batchnorm(skip, training=training)
 
-        t += skip
-        return tf.nn.relu(t)
+        intermediate += skip
+        return tf.nn.relu(intermediate)
 
 
 @final
