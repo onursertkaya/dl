@@ -4,8 +4,8 @@ from typing import Dict
 
 import tensorflow as tf
 
+from core.assembled_model import AssembledModel
 from interfaces.objective import Objective
-from zoo.models.base import AssembledModel
 
 
 class Task(abc.ABC):

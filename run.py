@@ -7,10 +7,10 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.resolve()))  # noqa: E402
 # pylint: disable=wrong-import-position
-from tools.commands.check import run_py_checks, run_py_tests
-from tools.commands.docker_commands import docker_build
-from tools.commands.download_data import download
+from tools.commands.check import run_py_checks
+from tools.commands.docker_commands import docker_build, docker_run_repo_root
 from tools.commands.experiment import PROJECTS_DIR_RELPATH, start_experiment
+from tools.commands.tests import run_py_tests
 
 # pylint: enable=wrong-import-position
 
@@ -49,8 +49,8 @@ def _parse_args():
     # Other commands
     subparsers.add_parser("check", help="Run checks and formatting.")
 
-    parser_script = subparsers.add_parser("script", help="Run a script.")
-    parser_script.add_argument("script_args", nargs="+")
+    parser_download = subparsers.add_parser("download", help="Download a dataset.")
+    parser_download.add_argument("name_and_path", nargs="+")
 
     subparsers.add_parser("tests", help="Run tests.")
     subparsers.add_parser("docker_build", help="Build the docker image.")
@@ -71,8 +71,12 @@ if __name__ == "__main__":
         start_experiment(args)
     elif args.subparser == "check":
         run_py_checks()
-    elif args.subparser == "download_data":
-        download(*args.script_args)
+    elif args.subparser == "download":
+        docker_run_repo_root(
+            cmd="python3",
+            args=args.name_and_path,
+            additional_volumes={args.name_and_path[-1]: args.name_and_path[-1]},
+        )
     elif args.subparser == "tests":
         run_py_tests()
     elif args.subparser == "docker_build":

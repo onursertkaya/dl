@@ -1,20 +1,26 @@
 """Experiment summary."""
+from dataclasses import asdict
 from typing import Iterable
 
 import tensorflow as tf
 
 from core.experiment_settings import ExperimentSettings
+from core.task.evaluation import Evaluation
 from core.task.task import Task
+from core.task.task_group import TaskGroup
+from core.task.training import Training
 
 
 class Summary:
     """Experiment summary utilities."""
 
-    def __init__(self, settings: ExperimentSettings):
+    def __init__(self, settings: ExperimentSettings, tasks: TaskGroup):
         """Create a summary writer."""
         self._settings = settings
         self._stdout_writer = _StdoutWriter()
-        self._tensorboard_writer = _TensorboardWriter(logdir=self._settings.directory)
+        self._tensorboard_writer = _TensorboardWriter(
+            logdir=self._settings.directory, tasks=tasks
+        )
 
     def write(
         self, task: Task, task_num_batches: int, current_batch: int, current_epoch: int
@@ -46,12 +52,18 @@ class Summary:
             )
 
     def _write_to_disk(self, task: Task, batch_ctr: int, num_total_task_batches: int):
-        if self._check_modulo(
+        train_should_write = isinstance(task, Training) and self._check_modulo(
             batch_ctr,
             num_total_task_batches,
             self._settings.disk_writes_per_epoch,
-        ):
-            self._tensorboard_writer.write(task)
+        )
+        eval_should_write = isinstance(task, Evaluation) and (
+            batch_ctr == num_total_task_batches
+        )
+        assert not (train_should_write and eval_should_write)
+
+        if train_should_write or eval_should_write:
+            self._tensorboard_writer.write(task, freeze_step_for_eval=eval_should_write)
 
     @staticmethod
     def _check_modulo(
@@ -63,22 +75,29 @@ class Summary:
 class _TensorboardWriter:
     """Tensorboard summary utilities."""
 
-    def __init__(self, logdir: str):
+    def __init__(self, logdir: str, tasks: TaskGroup):
         """Create a writer."""
+        self._writers = {
+            type(task): tf.summary.create_file_writer(
+                f"{logdir}/tboard/{type(task).__name__}"
+            )
+            for task in asdict(tasks).values()
+            if task is not None
+        }
         self._write_ctr = 0
-        self._writer = tf.summary.create_file_writer(logdir + "/" + "tboard")
 
-    def write(self, task: Task):
+    def write(self, task: Task, freeze_step_for_eval: bool = False):
         """Write the tracked metrics of the task to the board."""
-        with self._writer.as_default():
-            with tf.name_scope(task.__class__.__name__):
-                for loss in task.loss_metrics:
-                    tf.summary.scalar(loss.name, loss.result(), step=self._write_ctr)
-                for perf_metric in task.performance_metrics:
-                    tf.summary.scalar(
-                        perf_metric.name, perf_metric.result(), step=self._write_ctr
-                    )
-                self._write_ctr += 1
+        task_writer = self._writers[type(task)]
+        with task_writer.as_default():
+            for loss in task.loss_metrics:
+                tf.summary.scalar(loss.name, loss.result(), step=self._write_ctr)
+            for perf_metric in task.performance_metrics:
+                tf.summary.scalar(
+                    perf_metric.name, perf_metric.result(), step=self._write_ctr
+                )
+        if not freeze_step_for_eval:
+            self._write_ctr += 1
 
 
 class _StdoutWriter:

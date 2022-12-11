@@ -3,9 +3,9 @@ from typing import Dict, final
 
 import tensorflow as tf
 
+from core.assembled_model import AssembledModel
 from core.task.task import Task
 from interfaces.objective import Objective
-from zoo.models.base import AssembledModel
 
 
 @final

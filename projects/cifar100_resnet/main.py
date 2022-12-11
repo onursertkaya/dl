@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Experiments with mnist and resnet."""
+"""Experiments with cifar100 and resnet."""
 import tensorflow as tf
 
 from core.assembled_model import AssembledModel
@@ -8,14 +8,14 @@ from core.experiment_settings import ExperimentSettings
 from core.task.evaluation import Evaluation
 from core.task.task_group import TaskGroup
 from core.task.training import Training
-from projects.mnist_resnet.data.loader import MnistLoader
-from projects.mnist_resnet.data.pre_proc import MnistPreProc
-from projects.mnist_resnet.objective.mnist_objective import MnistObjective
+from projects.cifar100_resnet.data.loader import Cifar100Loader
+from projects.cifar100_resnet.data.pre_proc import Cifar100PreProc
+from projects.cifar100_resnet.objective.objective import Cifar100Objective
 from tools.common_project_args import make_argument_parser
 from zoo.heads.dense import DenseHead
 from zoo.models.resnet import Resnet, ResnetBlockC
 
-# TODO: add an integration test for train/eval runtime and stats of 1 epoch.
+# TODO: add an integration test for train/eval runtime of 1 epoch.
 
 
 def main():
@@ -32,25 +32,25 @@ def main():
         eval_batch_size=32,
     )
 
-    objective = MnistObjective()
+    objective = Cifar100Objective()
     optimizer = tf.keras.optimizers.Adam()
     tasks = TaskGroup(
         Training(optimizer, objective),
         Evaluation(objective),
     )
 
-    loader = MnistLoader(
+    loader = Cifar100Loader(
         train_batch_size=settings.train_batch_size,
         eval_batch_size=settings.eval_batch_size,
         path=args.data_dir,
-        pre_proc=MnistPreProc(),
+        pre_proc=Cifar100PreProc(),
     )
 
     model = AssembledModel(
         backbone=Resnet(34, ResnetBlockC),
         heads={
-            MnistLoader.HeadNames.CLASSIFICATION: DenseHead(
-                [(1000, "relu"), (10, None)]
+            Cifar100Loader.HeadNames.CLASSIFICATION: DenseHead(
+                [(1000, "relu"), (20, None)]
             )
         },
         input_signature=loader.make_tensorspec_for_export(),

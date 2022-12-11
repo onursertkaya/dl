@@ -15,6 +15,7 @@ pyfakefs
 jsonschema
 ruamel.yaml
 pillow
+requests
 
 # dl
 onnxruntime

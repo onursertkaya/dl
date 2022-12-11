@@ -3,7 +3,7 @@ from typing import final
 
 import tensorflow as tf
 
-from zoo.models.base import ModelBackbone
+from interfaces.model import ModelBackbone
 
 
 @final

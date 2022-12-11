@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from typing import List, Type, final
 
+from interfaces.model import ModelBackbone
 from zoo.blocks.residual import (
     BottleneckBlock,
     InitialPoolBlock,
@@ -11,7 +12,6 @@ from zoo.blocks.residual import (
     ResnetBlockB,
     ResnetBlockC,
 )
-from zoo.models.base import ModelBackbone
 
 
 @final

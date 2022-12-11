@@ -6,6 +6,7 @@ from typing import Optional
 
 import tensorflow as tf
 
+from core.assembled_model import AssembledModel
 from core.experiment_settings import ExperimentSettings
 from core.export import Export
 from core.summary import Summary
@@ -14,7 +15,6 @@ from core.task.task import Task
 from core.task.task_group import TaskGroup
 from core.task.training import Training
 from interfaces.dataloader import Loader
-from zoo.models.base import AssembledModel
 
 # TODO:
 # Essential funtionality
@@ -41,8 +41,8 @@ from zoo.models.base import AssembledModel
 # Chores
 
 # - fixed seeds, np and tf
-# - ./run.py mount host cache dir
 # - replace print statements with logging.info
+# - resolve the absl warning for traced functions
 
 # Ideas
 
@@ -78,7 +78,7 @@ class Experiment:
             else None
         )
 
-        self._summary = Summary(self._settings)
+        self._summary = Summary(self._settings, self._tasks)
         self._register_interrupt_signal_callback()
 
     def start(self):

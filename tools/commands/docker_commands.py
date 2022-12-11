@@ -45,7 +45,7 @@ def docker_build(tag: Optional[str] = ""):
     )
 
 
-def _docker_run(
+def _docker_run(  # pylint: disable=too-many-arguments
     cmd: str,
     args: List[str],
     run_from: str,
