@@ -3,9 +3,10 @@ import os
 import subprocess
 from datetime import date
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from tools.get_repo_root import get_repo_root
+from util.container_volume import ContainerVolume, VolumeMapping
 
 NAME = "dl"
 VERSIONS = [
@@ -15,10 +16,7 @@ VERSIONS = [
     "2022-02-05",
 ]
 
-REPO_ROOT = "/workdir"
 DOCKERFILE_RELPATH = "tools/conf/Dockerfile"
-
-VolumeMapping = Dict[str, str]
 
 
 def docker_build(tag: Optional[str] = ""):
@@ -102,7 +100,9 @@ def _docker_run(  # pylint: disable=too-many-arguments
         cmd,
         *args,
     ]
-    print(f"Running the command in container {latest_image_name_and_tag}")
+    print(
+        f"\033[94mRunning the command in container {latest_image_name_and_tag}\033[0m"
+    )
     print("\t", f"{cmd} {' '.join(args)}")
     subprocess.run(docker_cmd, check=not continue_running)
 
@@ -122,9 +122,9 @@ def docker_run_repo_root(
     _docker_run(
         cmd,
         args,
-        run_from=REPO_ROOT,
+        run_from=ContainerVolume.REPO_ROOT,
         volume_mapping={
-            repo_root_on_host: REPO_ROOT,
+            repo_root_on_host: ContainerVolume.REPO_ROOT,
             **additional_volumes,
         },
         tf_verbose=tf_verbose,

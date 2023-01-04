@@ -61,6 +61,7 @@ def main():
         tasks=tasks,
         data_loader=loader,
         model=model,
+        debug=args.debug,
     )
     experiment.start()
 

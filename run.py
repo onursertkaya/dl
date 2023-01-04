@@ -11,6 +11,7 @@ from tools.commands.check import run_py_checks
 from tools.commands.docker_commands import docker_build, docker_run_repo_root
 from tools.commands.experiment import PROJECTS_DIR_RELPATH, start_experiment
 from tools.commands.tests import run_py_tests
+from tools.common_project_args import update_argument_parser
 
 # pylint: enable=wrong-import-position
 
@@ -22,13 +23,7 @@ def _parse_args():
     parser_experiment = subparsers.add_parser("experiment", help="Start an experiment.")
 
     # Experiment settings, required.
-    parser_experiment.add_argument("-n", "--name", type=str, required=True)
-    parser_experiment.add_argument("-t", "--tasks", type=str, required=True)
-    parser_experiment.add_argument("-d", "--data-dir", type=str, required=True)
-    parser_experiment.add_argument("-e", "--experiment-dir", type=str, required=True)
-    parser_experiment.add_argument(
-        "-r", "--restore-from-chkpt", type=str, default=None, required=False
-    )
+    parser_experiment = update_argument_parser(parser_experiment)
 
     # Experiment settings, optional.
     parser_experiment.add_argument(

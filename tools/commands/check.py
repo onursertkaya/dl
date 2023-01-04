@@ -1,5 +1,5 @@
 """Wrapper for running checkjobs in Docker container."""
-from tools.commands.docker_commands import REPO_ROOT, docker_run_repo_root
+from tools.commands.docker_commands import ContainerVolume, docker_run_repo_root
 from tools.misc import get_py_files_with_docker_paths
 
 CONF_ROOT = "tools/conf"
@@ -18,7 +18,7 @@ def run_py_checks():
     ):
         docker_run_repo_root(
             "python3",
-            args=["-m", job, *job_args, REPO_ROOT],
+            args=["-m", job, *job_args, ContainerVolume.REPO_ROOT],
             continue_running=True,
         )
         print(f"\n=== finished running {job}\n")

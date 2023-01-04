@@ -1,9 +1,11 @@
 """Class for orchestrating deep learning experiments."""
 import os
+import signal
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+import numpy as np
 import tensorflow as tf
 
 from core.assembled_model import AssembledModel
@@ -22,7 +24,6 @@ from interfaces.dataloader import Loader
 # - add model loading -> inference support
 #  - should not be a Task, as there would be no functionality reuse.
 # - learning rate scheduling & optimizer management, wrapped in TrainingPolicy class.
-# - augmentation, generalized within Preprocessing class
 # - base class for HyperParamSettings, each project needs to override
 #   - yaml serializer/deserializer for settings classes
 # - define scenarios for model loading as the implementation is going to differ
@@ -62,6 +63,7 @@ class Experiment:
         tasks: TaskGroup,
         data_loader: Loader,
         model: AssembledModel,
+        debug: bool = False,
     ):
         """Initialize an experiment."""
         self._settings = settings
@@ -79,7 +81,6 @@ class Experiment:
         )
 
         self._summary = Summary(self._settings, self._tasks)
-        self._register_interrupt_signal_callback()
 
     def start(self):
         """Start an experiment."""
@@ -146,17 +147,13 @@ class Experiment:
         #       consider warning the user in this case.
         self._model = tf.keras.models.load_model(self._settings.restore_from)
 
-    def _register_interrupt_signal_callback(self):
-        pass
-        # TODO: add signal.signal(signal.SIGINT, self._tasks.training.on_exit)
-
-    def _perform_post_epoch_ops(self, epoch_ctr: int):
+    def _perform_post_epoch_ops(self, epoch_ctr: int, force: bool = False):
         if self._tasks.training:
             self._tasks.training.reset_states()
 
             should_save_checkpoint = (
                 epoch_ctr % self._settings.model_serialization_freq == 0
-            )
+            ) or force
             if should_save_checkpoint:
                 checkpoint_dir = self._checkpoint_path / f"e-{epoch_ctr:0>3}"
                 print(f"Saving checkpoint to {checkpoint_dir}")
@@ -172,3 +169,10 @@ class Experiment:
     @property
     def _checkpoint_path(self) -> Path:
         return Path(self._settings.directory) / "checkpoints"
+
+    def _setup_env(self, debug: bool):
+        # TODO: setup the interrupt signal handler.
+        # signal.signal(signal.SIGINT, self._perform_post_epoch_ops)
+        tf.config.run_functions_eagerly(debug)
+        tf.random.set_seed(4)
+        np.random.seed(4)

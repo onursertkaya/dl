@@ -47,7 +47,6 @@ class ObjectiveFormulation:
     terms: Tuple[ObjectiveTerm]
     cumulative_loss_metric: tf.keras.metrics.Mean
 
-    @tf.function
     def calculate(self, labels, predictions):
         """Calculate the loss value given labels and predictions."""
         losses = []
@@ -74,7 +73,6 @@ class Objective(abc.ABC):
         self._objective_formulation = self._build_objective_formulation()
         self._performance_metrics = self._build_performance_metrics()
 
-    @tf.function
     def __call__(self, labels, predictions):
         """Calculate the cumulative loss value of labels and predictions."""
         cumulative_loss = self._objective_formulation.calculate(labels, predictions)
