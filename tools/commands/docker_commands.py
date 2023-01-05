@@ -50,10 +50,11 @@ def _docker_run(  # pylint: disable=too-many-arguments
     volume_mapping: VolumeMapping,
     tf_verbose: bool = True,
     continue_running: bool = True,
+    daemon: bool = False,
 ):
     """Run development docker container."""
     run_params = [
-        "-it",
+        f"-{'d' if daemon else ''}it",
         "--rm",
         "--gpus",
         "all",
@@ -113,6 +114,7 @@ def docker_run_repo_root(
     additional_volumes: Optional[VolumeMapping] = None,
     tf_verbose: bool = True,
     continue_running: bool = True,
+    daemon: bool = False,
 ):
     """Run development docker container from repo root."""
     if additional_volumes is None:
@@ -129,4 +131,5 @@ def docker_run_repo_root(
         },
         tf_verbose=tf_verbose,
         continue_running=continue_running,
+        daemon=daemon,
     )

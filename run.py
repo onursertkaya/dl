@@ -15,12 +15,23 @@ from tools.common_project_args import update_argument_parser
 
 # pylint: enable=wrong-import-position
 
+class ArgModes:
+    """Constants for argument run modes."""
+
+    EXPERIMENT = "experiment"
+    CHECK = "check"
+    DOWNLOAD = "download"
+    TEST = "test"
+    DOCKER_BUILD = "docker_build"
+    INTERACTIVE = "interactive"
+    BACKGROUND = "background"
+
 
 def _parse_args():
     parser = argparse.ArgumentParser("Run a job.")
 
     subparsers = parser.add_subparsers(help="", dest="subparser")
-    parser_experiment = subparsers.add_parser("experiment", help="Start an experiment.")
+    parser_experiment = subparsers.add_parser(ArgModes.EXPERIMENT, help="Start an experiment.")
 
     # Experiment settings, required.
     parser_experiment = update_argument_parser(parser_experiment)
@@ -42,13 +53,15 @@ def _parse_args():
     )
 
     # Other commands
-    subparsers.add_parser("check", help="Run checks and formatting.")
+    subparsers.add_parser(ArgModes.CHECK, help="Run checks and formatting.")
 
-    parser_download = subparsers.add_parser("download", help="Download a dataset.")
+    parser_download = subparsers.add_parser(ArgModes.DOWNLOAD, help="Download a dataset.")
     parser_download.add_argument("name_and_path", nargs="+")
 
-    subparsers.add_parser("tests", help="Run tests.")
-    subparsers.add_parser("docker_build", help="Build the docker image.")
+    subparsers.add_parser(ArgModes.TEST, help="Run tests.")
+    subparsers.add_parser(ArgModes.DOCKER_BUILD, help="Build the docker image.")
+    subparsers.add_parser(ArgModes.BACKGROUND, help="Run the docker image in the background.")
+    subparsers.add_parser(ArgModes.INTERACTIVE, help="Run the docker image interactively.")
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -62,20 +75,31 @@ if __name__ == "__main__":
 
     args = _parse_args()
 
-    if args.subparser == "experiment":
+    if args.subparser == ArgModes.EXPERIMENT:
         start_experiment(args)
-    elif args.subparser == "check":
+    elif args.subparser == ArgModes.CHECK:
         run_py_checks()
-    elif args.subparser == "download":
+    elif args.subparser == ArgModes.DOWNLOAD:
         docker_run_repo_root(
             cmd="python3",
             args=args.name_and_path,
             additional_volumes={args.name_and_path[-1]: args.name_and_path[-1]},
         )
-    elif args.subparser == "tests":
+    elif args.subparser == ArgModes.TEST:
         run_py_tests()
-    elif args.subparser == "docker_build":
+    elif args.subparser == ArgModes.DOCKER_BUILD:
         docker_build()
+    elif args.subparser == ArgModes.INTERACTIVE:
+        docker_run_repo_root(
+            cmd="/bin/bash",
+            args=[],
+        )
+    elif args.subparser == ArgModes.BACKGROUND:
+        docker_run_repo_root(
+            cmd="/bin/bash",
+            args=[],
+            daemon=True,
+        )
     else:
         raise RuntimeError(f"Invalid argument to {__file__}")
 
