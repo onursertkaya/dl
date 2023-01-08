@@ -1,6 +1,7 @@
 """Wrapper for running checkjobs in Docker container."""
-from tools.commands.docker_commands import ContainerVolume, docker_run_repo_root
-from tools.misc import get_py_files_with_docker_paths
+from tools.host.commands.docker_commands import ContainerVolume, docker_run_repo_root
+from tools.host.constants import Colors
+from tools.host.misc import get_py_files_with_docker_paths
 
 CONF_ROOT = "tools/conf"
 PYLINT_CONFIG_RELPATH = f"{CONF_ROOT}/pylintrc"
@@ -21,7 +22,7 @@ def run_py_checks():
             args=["-m", job, *job_args, ContainerVolume.REPO_ROOT],
             continue_running=True,
         )
-        print(f"\n=== finished running {job}\n")
+        print(f"{Colors.BLUE}\n=== finished running {job}{Colors.RESET}\n")
 
     _run_pylint()
     _run_mypy()

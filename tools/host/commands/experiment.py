@@ -2,7 +2,7 @@
 from argparse import Namespace
 from pathlib import Path
 
-from tools.commands.docker_commands import ContainerVolume, docker_run_repo_root
+from tools.host.commands.docker_commands import ContainerVolume, docker_run_repo_root
 
 PROJECTS_DIR_RELPATH = "projects"
 

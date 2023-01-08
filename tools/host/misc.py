@@ -3,7 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List
 
-from tools.get_repo_root import get_repo_root
+from tools.host.get_repo_root import get_repo_root
 
 
 @lru_cache(maxsize=1)

@@ -11,7 +11,7 @@ from core.task.training import Training
 from projects.mnist_resnet.data.loader import MnistLoader
 from projects.mnist_resnet.data.pre_proc import MnistPreProc
 from projects.mnist_resnet.objective.mnist_objective import MnistObjective
-from tools.common_project_args import make_argument_parser
+from tools.common.common_project_args import make_argument_parser
 from zoo.heads.dense import DenseHead
 from zoo.models.resnet import Resnet, ResnetBlockC
 
@@ -30,6 +30,7 @@ def main():
         restore_from=args.restore_from_chkpt,
         train_batch_size=64,
         eval_batch_size=32,
+        debug=args.debug,
     )
 
     objective = MnistObjective()
@@ -61,7 +62,6 @@ def main():
         tasks=tasks,
         data_loader=loader,
         model=model,
-        debug=args.debug,
     )
     experiment.start()
 

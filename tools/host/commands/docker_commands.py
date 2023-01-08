@@ -5,8 +5,9 @@ from datetime import date
 from pathlib import Path
 from typing import List, Optional
 
-from tools.get_repo_root import get_repo_root
-from util.container_volume import ContainerVolume, VolumeMapping
+from tools.common.container_volume import ContainerVolume, VolumeMapping
+from tools.host.constants import Colors
+from tools.host.get_repo_root import get_repo_root
 
 NAME = "dl"
 VERSIONS = [
@@ -43,7 +44,7 @@ def docker_build(tag: Optional[str] = ""):
     )
 
 
-def _docker_run(  # pylint: disable=too-many-arguments
+def _docker_run(  # pylint: disable=too-many-arguments,too-many-locals
     cmd: str,
     args: List[str],
     run_from: str,
@@ -102,13 +103,14 @@ def _docker_run(  # pylint: disable=too-many-arguments
         *args,
     ]
     print(
-        f"\033[94mRunning the command in container {latest_image_name_and_tag}\033[0m"
+        f"{Colors.BLUE}Running the command in container "
+        f"{latest_image_name_and_tag}{Colors.RESET}"
     )
     print("\t", f"{cmd} {' '.join(args)}")
     subprocess.run(docker_cmd, check=not continue_running)
 
 
-def docker_run_repo_root(
+def docker_run_repo_root(  # pylint: disable=too-many-arguments
     cmd: str,
     args: List[str],
     additional_volumes: Optional[VolumeMapping] = None,

@@ -1,7 +1,5 @@
 """Class for orchestrating deep learning experiments."""
 import os
-import signal
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -17,10 +15,12 @@ from core.task.task import Task
 from core.task.task_group import TaskGroup
 from core.task.training import Training
 from interfaces.dataloader import Loader
+from tools.common.log import make_logger
 
 # TODO:
 # Essential funtionality
 
+# Resolve global state of NCHW/NHWC
 # - add model loading -> inference support
 #  - should not be a Task, as there would be no functionality reuse.
 # - learning rate scheduling & optimizer management, wrapped in TrainingPolicy class.
@@ -38,12 +38,6 @@ from interfaces.dataloader import Loader
 #     - eval/infer/use network output for training other network (same as infer):
 #       - just the model
 #   - more??
-
-# Chores
-
-# - fixed seeds, np and tf
-# - replace print statements with logging.info
-# - resolve the absl warning for traced functions
 
 # Ideas
 
@@ -63,10 +57,10 @@ class Experiment:
         tasks: TaskGroup,
         data_loader: Loader,
         model: AssembledModel,
-        debug: bool = False,
     ):
         """Initialize an experiment."""
         self._settings = settings
+
         self._tasks = tasks
         self._loader = data_loader
 
@@ -79,24 +73,22 @@ class Experiment:
             if self._tasks.training
             else None
         )
-
+        self._setup_env(self._settings.debug)
+        self._log = make_logger(
+            name=__name__, filename=f"{type(self).__name__.lower()}.log"
+        )
         self._summary = Summary(self._settings, self._tasks)
 
     def start(self):
         """Start an experiment."""
-        print(
-            f"Starting experiment {self._settings.name} {datetime.now().isoformat()}.\n\n\n"
-        )
-
+        self._log.info(f"Starting experiment {self._settings.name}")
         for epoch_ctr in range(1, 1 + self._settings.epochs):
             self._train_one_epoch(epoch_ctr)
             self._evaluate_one_epoch(epoch_ctr)
             self._perform_post_epoch_ops(epoch_ctr)
-        print("Experiment finished.")
+        self._log.info("Experiment finished.")
         if self._exporter:
-            print("Exporting...")
             self._exporter.create_onnx()
-            print("Done")
 
     def _train_one_epoch(self, epoch_ctr: int):
         self._perform_task(epoch_ctr, self._tasks.training)
@@ -141,7 +133,7 @@ class Experiment:
     def _restore_model(self):
         dir_content = set(os.listdir(self._settings.restore_from))
         assert {"assets", "variables", "saved_model.pb"}.issubset(dir_content)
-        print("Restoring entire model with weights and optimizer state...")
+        self._log.info("Restoring entire model with weights and optimizer state...")
         # TODO: ensure loaded model's config (arch) and self._model's are the same.
         #       otherwise, loaded model completely overwrites the model requested by the user.
         #       consider warning the user in this case.
@@ -156,7 +148,7 @@ class Experiment:
             ) or force
             if should_save_checkpoint:
                 checkpoint_dir = self._checkpoint_path / f"e-{epoch_ctr:0>3}"
-                print(f"Saving checkpoint to {checkpoint_dir}")
+                self._log.info(f"Saving checkpoint to {checkpoint_dir}")
                 # self._model.save_weights(self._checkpoint_path)
                 self._model.save(checkpoint_dir)
 

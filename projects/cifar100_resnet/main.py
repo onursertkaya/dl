@@ -11,7 +11,7 @@ from core.task.training import Training
 from projects.cifar100_resnet.data.loader import Cifar100Loader
 from projects.cifar100_resnet.data.pre_proc import Cifar100PreProc
 from projects.cifar100_resnet.objective.objective import Cifar100Objective
-from tools.common_project_args import make_argument_parser
+from tools.common.common_project_args import make_argument_parser
 from zoo.heads.dense import DenseHead
 from zoo.models.resnet import Resnet, ResnetBlockC
 
@@ -30,6 +30,7 @@ def main():
         restore_from=args.restore_from_chkpt,
         train_batch_size=64,
         eval_batch_size=32,
+        debug=args.debug,
     )
 
     objective = Cifar100Objective()
@@ -61,7 +62,6 @@ def main():
         tasks=tasks,
         data_loader=loader,
         model=model,
-        debug=args.debug,
     )
     experiment.start()
 

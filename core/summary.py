@@ -9,6 +9,7 @@ from core.task.evaluation import Evaluation
 from core.task.task import Task
 from core.task.task_group import TaskGroup
 from core.task.training import Training
+from tools.common.log import make_logger
 
 
 class Summary:
@@ -103,6 +104,9 @@ class _TensorboardWriter:
 class _StdoutWriter:
     """Stdout summary utilities."""
 
+    def __init__(self):
+        self._log = make_logger(__name__)
+
     # pylint: disable=too-many-arguments
     def print(self, task: Task, epoch: int, epochs: int, batch: int, batches: int):
         """Print to stdout."""
@@ -112,7 +116,7 @@ class _StdoutWriter:
         losses = self._format_metric(task.loss_metrics)
         perf_metrics = self._format_metric(task.performance_metrics)
 
-        print(
+        self._log.info(
             " | ".join(
                 [
                     epoch_count,

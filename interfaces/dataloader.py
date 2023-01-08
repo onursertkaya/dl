@@ -7,7 +7,7 @@ import tensorflow as tf
 from interfaces.pre_proc import PreProcessing
 
 
-class Loader(abc.ABC):
+class Loader(abc.ABC):  # pylint: disable=too-many-instance-attributes
     """Data loader base."""
 
     EXPORT_BATCH_SIZE = 1

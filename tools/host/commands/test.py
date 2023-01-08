@@ -1,6 +1,6 @@
 """Wrapper for running tests in Docker container."""
-from tools.commands.docker_commands import docker_run_repo_root
-from tools.misc import get_py_files_with_docker_paths
+from tools.host.commands.docker_commands import docker_run_repo_root
+from tools.host.misc import get_py_files_with_docker_paths
 
 
 def run_py_tests():

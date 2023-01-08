@@ -26,4 +26,5 @@ class ExperimentSettings:  # pylint: disable=too-many-instance-attributes
     date_time: str = datetime.now().isoformat()
     unique_identifier: str = str(uuid4())
 
+    debug: bool = False
     restore_from: Optional[str] = None

@@ -7,13 +7,14 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.resolve()))  # noqa: E402
 # pylint: disable=wrong-import-position
-from tools.commands.check import run_py_checks
-from tools.commands.docker_commands import docker_build, docker_run_repo_root
-from tools.commands.experiment import PROJECTS_DIR_RELPATH, start_experiment
-from tools.commands.tests import run_py_tests
-from tools.common_project_args import update_argument_parser
+from tools.common.common_project_args import update_argument_parser
+from tools.host.commands.check import run_py_checks
+from tools.host.commands.docker_commands import docker_build, docker_run_repo_root
+from tools.host.commands.experiment import PROJECTS_DIR_RELPATH, start_experiment
+from tools.host.commands.test import run_py_tests
 
 # pylint: enable=wrong-import-position
+
 
 class ArgModes:
     """Constants for argument run modes."""
@@ -31,7 +32,9 @@ def _parse_args():
     parser = argparse.ArgumentParser("Run a job.")
 
     subparsers = parser.add_subparsers(help="", dest="subparser")
-    parser_experiment = subparsers.add_parser(ArgModes.EXPERIMENT, help="Start an experiment.")
+    parser_experiment = subparsers.add_parser(
+        ArgModes.EXPERIMENT, help="Start an experiment."
+    )
 
     # Experiment settings, required.
     parser_experiment = update_argument_parser(parser_experiment)
@@ -55,13 +58,19 @@ def _parse_args():
     # Other commands
     subparsers.add_parser(ArgModes.CHECK, help="Run checks and formatting.")
 
-    parser_download = subparsers.add_parser(ArgModes.DOWNLOAD, help="Download a dataset.")
+    parser_download = subparsers.add_parser(
+        ArgModes.DOWNLOAD, help="Download a dataset."
+    )
     parser_download.add_argument("name_and_path", nargs="+")
 
     subparsers.add_parser(ArgModes.TEST, help="Run tests.")
     subparsers.add_parser(ArgModes.DOCKER_BUILD, help="Build the docker image.")
-    subparsers.add_parser(ArgModes.BACKGROUND, help="Run the docker image in the background.")
-    subparsers.add_parser(ArgModes.INTERACTIVE, help="Run the docker image interactively.")
+    subparsers.add_parser(
+        ArgModes.BACKGROUND, help="Run the docker image in the background."
+    )
+    subparsers.add_parser(
+        ArgModes.INTERACTIVE, help="Run the docker image interactively."
+    )
 
     if len(sys.argv) == 1:
         parser.print_help()
