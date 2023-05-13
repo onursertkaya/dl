@@ -18,8 +18,6 @@ pillow
 requests
 
 # dl
-onnxruntime
-tf2onnx
 tensorflow~=2.9.0
-protobuf<3.20
-flatbuffers<2
+onnx==1.12.0
+tf2onnx
