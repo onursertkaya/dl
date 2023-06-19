@@ -11,6 +11,7 @@ from tools.host.get_repo_root import get_repo_root
 
 NAME = "dl"
 VERSIONS = [
+    "2023-06-19",
     "2022-11-28",
     "2022-11-17",
     "2022-04-04",
