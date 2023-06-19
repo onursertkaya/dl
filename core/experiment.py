@@ -7,8 +7,8 @@ import numpy as np
 import tensorflow as tf
 
 from core.assembled_model import AssembledModel
-from core.experiment_settings import ExperimentSettings
 from core.export import Export
+from core.settings import ExperimentSettings
 from core.summary import Summary
 from core.task.evaluation import Evaluation
 from core.task.task import Task
@@ -59,12 +59,16 @@ class Experiment:
         model: AssembledModel,
     ):
         """Initialize an experiment."""
+        settings.validate()
         self._settings = settings
+        self._setup_env(self._settings.config.debug)
 
         self._tasks = tasks
         self._loader = data_loader
 
-        self._model = self._restore_model() if self._settings.restore_from else model
+        self._model = (
+            self._restore_model() if self._settings.restore_from is not None else model
+        )
         self._exporter = (
             Export(
                 onnx_path=self._onnx_path,
@@ -73,7 +77,6 @@ class Experiment:
             if self._tasks.training
             else None
         )
-        self._setup_env(self._settings.debug)
         self._log = make_logger(
             name=__name__, filename=f"{type(self).__name__.lower()}.log"
         )
@@ -81,8 +84,8 @@ class Experiment:
 
     def start(self):
         """Start an experiment."""
-        self._log.info(f"Starting experiment {self._settings.name}")
-        for epoch_ctr in range(1, 1 + self._settings.epochs):
+        self._log.info(f"Starting experiment under {self._settings.output_directory}")
+        for epoch_ctr in range(1, 1 + self._settings.config.epochs):
             self._train_one_epoch(epoch_ctr)
             self._evaluate_one_epoch(epoch_ctr)
             self._perform_post_epoch_ops(epoch_ctr)
@@ -113,7 +116,7 @@ class Experiment:
             data_handle = self._loader.eval_data_handle
             num_batches = self._loader.eval_num_batches
             should_perform = (self._tasks.evaluation is not None) and (
-                epoch_ctr % self._settings.train_eval_freq_ratio == 0
+                epoch_ctr % self._settings.config.train_eval_freq_ratio == 0
             )
         else:
             raise Experiment.InvalidExperimentTask(type(task))
@@ -144,7 +147,7 @@ class Experiment:
             self._tasks.training.reset_states()
 
             should_save_checkpoint = (
-                epoch_ctr % self._settings.model_serialization_freq == 0
+                epoch_ctr % self._settings.config.model_serialization_freq == 0
             ) or force
             if should_save_checkpoint:
                 checkpoint_dir = self._checkpoint_path / f"e-{epoch_ctr:0>3}"
@@ -155,14 +158,15 @@ class Experiment:
     @property
     def _onnx_path(self):
         return (
-            Path(self._settings.directory) / "onnx_export" / self._settings.name
+            Path(self._settings.output_directory) / "onnx_export" / "model.onnx"
         ).with_suffix(".onnx")
 
     @property
     def _checkpoint_path(self) -> Path:
-        return Path(self._settings.directory) / "checkpoints"
+        return Path(self._settings.output_directory) / "checkpoints"
 
-    def _setup_env(self, debug: bool):
+    @staticmethod
+    def _setup_env(debug: bool):
         # TODO: setup the interrupt signal handler.
         # signal.signal(signal.SIGINT, self._perform_post_epoch_ops)
         tf.config.run_functions_eagerly(debug)

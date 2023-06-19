@@ -7,7 +7,6 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.resolve()))  # noqa: E402
 # pylint: disable=wrong-import-position
-from tools.common.common_project_args import update_argument_parser
 from tools.host.commands.check import run_py_checks
 from tools.host.commands.docker_commands import docker_build, docker_run_repo_root
 from tools.host.commands.experiment import PROJECTS_DIR_RELPATH, start_experiment
@@ -21,6 +20,7 @@ class ArgModes:
 
     EXPERIMENT = "experiment"
     CHECK = "check"
+    GENERATE_DEFAULT_CONFIGS = "generate_default_configs"
     DOWNLOAD = "download"
     TEST = "test"
     DOCKER_BUILD = "docker_build"
@@ -36,23 +36,15 @@ def _parse_args():
         ArgModes.EXPERIMENT, help="Start an experiment."
     )
 
-    # Experiment settings, required.
-    parser_experiment = update_argument_parser(parser_experiment)
-
-    # Experiment settings, optional.
     parser_experiment.add_argument(
         "-v", "--verbose-tf", action="store_true", required=False
     )
-
-    # Project settings
-    current_projects = sorted(
-        [project.name for project in Path(PROJECTS_DIR_RELPATH).iterdir()]
-    )
     parser_experiment.add_argument(
-        "-p", "--project", type=str, required=True, choices=current_projects
-    )
-    parser_experiment.add_argument(
-        "--project-args", nargs=argparse.REMAINDER, default=[]
+        "-p",
+        "--project",
+        type=str,
+        required=True,
+        choices=[project.name for project in Path(PROJECTS_DIR_RELPATH).iterdir()],
     )
 
     # Other commands
@@ -71,6 +63,7 @@ def _parse_args():
     subparsers.add_parser(
         ArgModes.INTERACTIVE, help="Run the docker image interactively."
     )
+    subparsers.add_parser(ArgModes.GENERATE_DEFAULT_CONFIGS, help="Generate configs.")
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -85,13 +78,19 @@ if __name__ == "__main__":
     args = _parse_args()
 
     if args.subparser == ArgModes.EXPERIMENT:
-        start_experiment(args)
+        start_experiment(args.project, args.verbose_tf)
     elif args.subparser == ArgModes.CHECK:
         run_py_checks()
-    elif args.subparser == ArgModes.DOWNLOAD:
+    elif args.subparser == ArgModes.GENERATE_DEFAULT_CONFIGS:
         docker_run_repo_root(
             cmd="python3",
-            args=args.name_and_path,
+            args=["tools/container/generate_project_default_configs.py"],
+        )
+    elif args.subparser == ArgModes.DOWNLOAD:
+        Path(args.name_and_path[1]).mkdir(parents=True)
+        docker_run_repo_root(
+            cmd="python3",
+            args=["tools/container/download_data.py", *args.name_and_path],
             additional_volumes={args.name_and_path[-1]: args.name_and_path[-1]},
         )
     elif args.subparser == ArgModes.TEST:

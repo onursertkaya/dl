@@ -4,7 +4,7 @@ from typing import Iterable
 
 import tensorflow as tf
 
-from core.experiment_settings import ExperimentSettings
+from core.settings import ExperimentSettings
 from core.task.evaluation import Evaluation
 from core.task.task import Task
 from core.task.task_group import TaskGroup
@@ -20,7 +20,7 @@ class Summary:
         self._settings = settings
         self._stdout_writer = _StdoutWriter()
         self._tensorboard_writer = _TensorboardWriter(
-            logdir=self._settings.directory, tasks=tasks
+            logdir=self._settings.output_directory, tasks=tasks
         )
 
     def write(
@@ -40,14 +40,14 @@ class Summary:
         self, task: Task, batch_ctr: int, num_total_task_batches: int, epoch_ctr
     ):
         is_modulo = self._check_modulo(
-            batch_ctr, num_total_task_batches, self._settings.prints_per_epoch
+            batch_ctr, num_total_task_batches, self._settings.config.prints_per_epoch
         )
         is_first_or_last_batch = batch_ctr in [num_total_task_batches, 1]
         if is_modulo or is_first_or_last_batch:
             self._stdout_writer.print(
                 task,
                 epoch_ctr,
-                self._settings.epochs,
+                self._settings.config.epochs,
                 batch_ctr,
                 num_total_task_batches,
             )
@@ -56,7 +56,7 @@ class Summary:
         train_should_write = isinstance(task, Training) and self._check_modulo(
             batch_ctr,
             num_total_task_batches,
-            self._settings.disk_writes_per_epoch,
+            self._settings.config.disk_writes_per_epoch,
         )
         eval_should_write = isinstance(task, Evaluation) and (
             batch_ctr == num_total_task_batches

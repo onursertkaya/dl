@@ -9,10 +9,10 @@ for external_module in ("absl", "tensorflow"):
 
 def make_logger(name: str, filename: Optional[str] = None) -> logging.Logger:
     """Create a logger with configuration."""
-    return configure_logger(logging.getLogger(name), filename)
+    return _configure_logger(logging.getLogger(name), filename)
 
 
-def configure_logger(
+def _configure_logger(
     logger: logging.Logger, filename: Optional[str] = None
 ) -> logging.Logger:
     """Configure an already created logger."""

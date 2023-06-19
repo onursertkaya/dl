@@ -1,46 +1,37 @@
 """Run an experiment."""
-from argparse import Namespace
 from pathlib import Path
 
-from tools.host.commands.docker_commands import ContainerVolume, docker_run_repo_root
+from core.settings import ExperimentSettings
+from tools.host.commands.docker_commands import docker_run_repo_root
 
 PROJECTS_DIR_RELPATH = "projects"
 
 
-def start_experiment(args: Namespace):
+def start_experiment(project: str, verbose_tf: bool = True):
     """Start an experiment in docker container."""
-    experiment_name = args.name
-    experiment_tasks = args.tasks
-    experiment_dir = args.experiment_dir
-    data_dir = args.data_dir
-    checkpoint_to_restore = args.restore_from_chkpt
-    project_args = args.project_args
-    debug = args.debug
-
-    assert Path(data_dir).is_dir()
-    Path(experiment_dir).mkdir(exist_ok=True, parents=True)
-    assert any(task in args.tasks.split(",") for task in ["train", "eval", "infer"])
-    if checkpoint_to_restore:
-        assert Path(checkpoint_to_restore)
-
-    container_volume = ContainerVolume(experiment_dir, data_dir, checkpoint_to_restore)
+    settings = ExperimentSettings.load_project_default(project)
+    _ensure_paths(settings)
 
     docker_run_repo_root(
         cmd="python3",
         args=[
-            f"{PROJECTS_DIR_RELPATH}/{args.project}/main.py",
-            "-n",
-            experiment_name,
-            "-t",
-            experiment_tasks,
-            "-d",
-            ContainerVolume.DATA_DIR,
-            "-e",
-            ContainerVolume.EXPERIMENT_DIR,
-            *(["-r", ContainerVolume.CHECKPOINT_DIR] if checkpoint_to_restore else []),
-            *(["--debug"] if debug else []),
-            *project_args,
+            f"{PROJECTS_DIR_RELPATH}/{project}/main.py",
         ],
-        additional_volumes=container_volume.make_mapping(),
-        tf_verbose=args.verbose_tf,
+        additional_volumes=_make_volume_mapping(settings),
+        tf_verbose=verbose_tf,
     )
+
+
+def _ensure_paths(settings: ExperimentSettings):
+    Path(settings.output_directory).mkdir(exist_ok=False, parents=True)
+    assert Path(settings.data_directory).is_dir()
+    if settings.restore_from is not None:
+        assert Path(settings.restore_from).is_dir()
+
+
+def _make_volume_mapping(settings: ExperimentSettings):
+    mapping = {
+        settings.output_directory: settings.output_directory,
+        settings.data_directory: settings.data_directory,
+    }
+    return mapping

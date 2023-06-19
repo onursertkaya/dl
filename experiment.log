@@ -1,0 +1,20 @@
+[ 2023-05-21 15:47:11,441 | core.experiment ] Starting experiment under /home/s0001143/testingmnist
+[ 2023-05-21 15:47:33,026 | core.experiment ] Saving checkpoint to /home/s0001143/testingmnist/checkpoints/e-001
+[ 2023-05-21 15:47:53,688 | core.experiment ] Saving checkpoint to /home/s0001143/testingmnist/checkpoints/e-002
+[ 2023-05-21 15:47:57,146 | core.experiment ] Experiment finished.
+[ 2023-05-21 15:56:09,440 | core.experiment ] Starting experiment under /home/s0001143/testingmnist
+[ 2023-05-21 15:56:30,301 | core.experiment ] Saving checkpoint to /home/s0001143/testingmnist/checkpoints/e-001
+[ 2023-05-21 15:56:50,555 | core.experiment ] Saving checkpoint to /home/s0001143/testingmnist/checkpoints/e-002
+[ 2023-05-21 15:56:53,942 | core.experiment ] Experiment finished.
+[ 2023-05-21 16:05:43,218 | core.experiment ] Starting experiment under /home/s0001143/cifartesting
+[ 2023-05-21 16:06:16,398 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-001
+[ 2023-05-21 16:06:49,611 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-002
+[ 2023-05-21 16:07:23,804 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-003
+[ 2023-05-21 16:07:58,187 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-004
+[ 2023-05-21 16:08:32,074 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-005
+[ 2023-05-21 16:09:05,822 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-006
+[ 2023-05-21 16:09:39,368 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-007
+[ 2023-05-21 16:10:12,411 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-008
+[ 2023-05-21 16:10:45,607 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-009
+[ 2023-05-21 16:11:18,888 | core.experiment ] Saving checkpoint to /home/s0001143/cifartesting/checkpoints/e-010
+[ 2023-05-21 16:11:25,708 | core.experiment ] Experiment finished.

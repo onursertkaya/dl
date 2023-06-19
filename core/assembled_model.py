@@ -1,4 +1,6 @@
 """An assembled deep neural network."""
+from __future__ import annotations
+
 from typing import Dict
 
 import tensorflow as tf

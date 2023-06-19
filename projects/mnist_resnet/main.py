@@ -1,36 +1,31 @@
 #!/usr/bin/env python3
 """Experiments with mnist and resnet."""
+from pathlib import Path
+
 import tensorflow as tf
 
 from core.assembled_model import AssembledModel
 from core.experiment import Experiment
-from core.experiment_settings import ExperimentSettings
+from core.settings import DEFAULT_CONFIG_JSON_FILENAME, ExperimentSettings
 from core.task.evaluation import Evaluation
 from core.task.task_group import TaskGroup
 from core.task.training import Training
 from projects.mnist_resnet.data.loader import MnistLoader
 from projects.mnist_resnet.data.pre_proc import MnistPreProc
 from projects.mnist_resnet.objective.mnist_objective import MnistObjective
-from tools.common.common_project_args import make_argument_parser
 from zoo.heads.dense import DenseHead
-from zoo.models.resnet import Resnet, ResnetBlockC
+from zoo.selection import make_backbone_from_config
 
 # TODO: add an integration test for train/eval runtime and stats of 1 epoch.
 
 
 def main():
     """Run an experiment."""
-    parser = make_argument_parser("mnist")
-    args = parser.parse_args()
+    project_name = Path(__file__).parts[-2]
+    settings = ExperimentSettings.load_project_default(project_name)
 
-    settings = ExperimentSettings(
-        name=args.name,
-        directory=args.experiment_dir,
-        epochs=10,
-        restore_from=args.restore_from_chkpt,
-        train_batch_size=64,
-        eval_batch_size=32,
-        debug=args.debug,
+    settings.serialize(
+        f"{settings.output_directory}/{DEFAULT_CONFIG_JSON_FILENAME}", mark_env=True
     )
 
     objective = MnistObjective()
@@ -41,14 +36,14 @@ def main():
     )
 
     loader = MnistLoader(
-        train_batch_size=settings.train_batch_size,
-        eval_batch_size=settings.eval_batch_size,
-        path=args.data_dir,
+        train_batch_size=settings.config.train_batch_size,
+        eval_batch_size=settings.config.eval_batch_size,
+        path=settings.data_directory,
         pre_proc=MnistPreProc(),
     )
 
     model = AssembledModel(
-        backbone=Resnet(34, ResnetBlockC),
+        backbone=make_backbone_from_config(settings.backbone),
         heads={
             MnistLoader.HeadNames.CLASSIFICATION: DenseHead(
                 [(1000, "relu"), (10, None)]

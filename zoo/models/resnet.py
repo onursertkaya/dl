@@ -52,9 +52,10 @@ class Resnet(ModelBackbone):
         ),
     }
 
-    def __init__(self, arch: int, variant: Type[ResnetBlock]):
+    def __init__(self, arch: int, variant: str):
         """Initialize encoder."""
-        self._validate(arch, variant)
+        variant_type = Resnet._get_variant_type_by_name(variant)
+        self._validate(arch, variant_type)
         super().__init__()
         layer_counts = type(self).CONFIGS[arch].layer_counts
 
@@ -63,11 +64,11 @@ class Resnet(ModelBackbone):
         for layer_type_idx, layer_count in enumerate(layer_counts):
             for idx in range(layer_count):
                 should_downsample = idx == 0
-                if variant is not BottleneckBlock:
+                if variant_type is not BottleneckBlock:
                     should_downsample = should_downsample and layer_type_idx != 0
 
                 self._layers.append(
-                    variant(
+                    variant_type(
                         name=f"conv{(layer_type_idx+1)}_{idx}",
                         num_filters=int(2 ** (layer_type_idx + 6)),  # 64, 128, ...
                         downsample=should_downsample,
@@ -81,8 +82,20 @@ class Resnet(ModelBackbone):
             intermediate = layer(intermediate, training)
         return intermediate
 
-    def _validate(self, arch, variant):
+    def _validate(self, arch, variant: Type[ResnetBlock]):
         assert arch in type(self).CONFIGS, f"Unknown ResNet architecture: {arch}"
         assert (
             variant in type(self).CONFIGS[arch].block_variants
         ), f"Unknown/incompatible ResNet variant: {variant}"
+
+    @staticmethod
+    def _get_variant_type_by_name(name: str) -> Type[ResnetBlock]:
+        blocks = {
+            m.__name__: m
+            for m in [
+                ResnetBlockA,
+                ResnetBlockB,
+                ResnetBlockC,
+            ]
+        }
+        return blocks[name]
